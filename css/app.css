@@ -284,3 +284,17 @@ a.upd { display: block; text-decoration: none; color: var(--text); }
 @keyframes slideL { from { opacity: .3; transform: translateX(28px); } to { opacity: 1; transform: none; } }
 @keyframes slideR { from { opacity: .3; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
 .tabbar { grid-template-columns: repeat(4, 1fr); }
+
+/* ---------- v3: fiksni okvir — meni i gornja traka uvek stoje, menja se samo stranica ---------- */
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; min-height: 0; }
+.topbar { position: relative; flex: none; }
+.view {
+  flex: 1 1 auto; min-height: 0; width: 100%; max-width: none; margin: 0;
+  overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 14px max(16px, calc((100% - 600px) / 2)) 24px;
+}
+.tabbar { position: relative; left: auto; right: auto; bottom: auto; flex: none; }
+.toast { bottom: calc(84px + var(--safe-b)); }
+.hist-wrap { overflow-x: auto; touch-action: pan-x pan-y; }

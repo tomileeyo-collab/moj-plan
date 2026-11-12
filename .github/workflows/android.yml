@@ -1,12 +1,26 @@
 name: Android APK
 
+# Nova verzija se pravi samo kad se promeni nešto što ulazi u aplikaciju.
 on:
   push:
     branches: [main]
+    paths:
+      - "index.html"
+      - "css/**"
+      - "js/**"
+      - "img/**"
+      - "icons/**"
+      - "android/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "capacitor.config.json"
+      - ".github/workflows/android.yml"
   workflow_dispatch:
 
+# Podrazumevano samo čitanje; pravo upisa ima samo korak za objavu.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: android-apk
@@ -18,8 +32,12 @@ jobs:
     env:
       APP_BUILD: ${{ github.run_number }}
       HAS_KEY: ${{ secrets.KEYSTORE_B64 != '' && secrets.KEYSTORE_PASSWORD != '' }}
+    outputs:
+      has_key: ${{ env.HAS_KEY }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -34,7 +52,7 @@ jobs:
 
       - name: Web fajlovi
         run: |
-          npm ci
+          npm ci --ignore-scripts
           npm run build:www
           npx cap sync android
 
@@ -49,6 +67,7 @@ jobs:
             echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/mojplan.p12"
             export KEYSTORE_FILE="$RUNNER_TEMP/mojplan.p12" KEY_ALIAS=mojplan
             ./gradlew assembleRelease --no-daemon
+            rm -f "$RUNNER_TEMP/mojplan.p12"
             cp app/build/outputs/apk/release/app-release.apk ../MojPlan.apk
           else
             echo "Nema ključa za potpis — pravim probnu (debug) verziju."
@@ -61,12 +80,28 @@ jobs:
           name: MojPlan-apk
           path: MojPlan.apk
 
+  release:
+    needs: build
+    if: needs.build.outputs.has_key == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: MojPlan-apk
+
       - name: Objavi verziju
-        if: env.HAS_KEY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: v${{ github.run_number }}
         run: |
-          gh release create "v${APP_BUILD}" MojPlan.apk \
-            --title "Moj Plan v${APP_BUILD}" \
-            --notes "Preuzmi MojPlan.apk i instaliraj. Tvoji podaci ostaju." \
-            --latest
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" MojPlan.apk --clobber
+          else
+            gh release create "$TAG" MojPlan.apk \
+              --title "Moj Plan $TAG" \
+              --notes "Preuzmi MojPlan.apk i instaliraj preko postojeće. Tvoji podaci ostaju." \
+              --latest
+          fi
