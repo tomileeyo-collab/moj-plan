@@ -250,3 +250,37 @@ details.acc .acc-body { padding: 0 14px 14px; }
 .start-big { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
 .row-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .mt { margin-top: 10px; }
+
+/* ---------- v2 ---------- */
+.kind { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.topbar .row { justify-content: flex-start; }
+.topbar .grow, .grow { flex: 1; }
+.icon-btn.back { font-size: 30px; line-height: 1; padding: 0 10px 4px 0; color: var(--text); }
+.menu { padding: 4px 14px; }
+.menu-row { width: 100%; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 8px; background: none; border: 0; border-top: 1px solid var(--line); padding: 14px 0; text-align: left; }
+.menu-row:first-child { border-top: 0; }
+.menu-row .mi { font-size: 24px; }
+.menu-row b { display: block; font-weight: 650; }
+.menu-row .chev { color: var(--muted); font-size: 24px; }
+.shop { padding: 2px 14px; }
+.shop-row { width: 100%; display: flex; align-items: center; gap: 12px; background: none; border: 0; border-top: 1px solid var(--line); padding: 11px 0; text-align: left; }
+.shop > .shop-row:first-child, .shop > .shop-row-wrap:first-child .shop-row { border-top: 0; }
+.shop-row .check { width: 26px; height: 26px; font-size: 13px; }
+.shop-row .nm { flex: 1; }
+.shop-row .q { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.shop-row.on .nm { text-decoration: line-through; color: var(--muted); }
+.shop-row.on .q { color: var(--muted); }
+.shop-row-wrap { display: flex; align-items: center; }
+.add-row { display: flex; gap: 8px; padding: 12px 0; border-top: 1px solid var(--line); }
+.add-row input { flex: 1; background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.kv.one { grid-template-columns: 1fr auto; }
+.kv.now b { color: var(--accent); }
+.tog { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); }
+.tog b { display: block; font-weight: 600; }
+.tog input { width: 46px; height: 26px; accent-color: var(--accent); flex: none; }
+a.upd { display: block; text-decoration: none; color: var(--text); }
+.slide-l { animation: slideL .22s ease-out; }
+.slide-r { animation: slideR .22s ease-out; }
+@keyframes slideL { from { opacity: .3; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes slideR { from { opacity: .3; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+.tabbar { grid-template-columns: repeat(4, 1fr); }

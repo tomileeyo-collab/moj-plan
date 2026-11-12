@@ -1,0 +1,9 @@
+{
+  "appId": "rs.mojplan.app",
+  "appName": "Moj Plan",
+  "webDir": "www",
+  "android": { "backgroundColor": "#0f1214" },
+  "plugins": {
+    "LocalNotifications": { "smallIcon": "ic_stat_notify", "iconColor": "#3DDC84" }
+  }
+}

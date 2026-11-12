@@ -1,0 +1,72 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      APP_BUILD: ${{ github.run_number }}
+      HAS_KEY: ${{ secrets.KEYSTORE_B64 != '' && secrets.KEYSTORE_PASSWORD != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Web fajlovi
+        run: |
+          npm ci
+          npm run build:www
+          npx cap sync android
+
+      - name: Pravljenje APK
+        working-directory: android
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          if [ "$HAS_KEY" = "true" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/mojplan.p12"
+            export KEYSTORE_FILE="$RUNNER_TEMP/mojplan.p12" KEY_ALIAS=mojplan
+            ./gradlew assembleRelease --no-daemon
+            cp app/build/outputs/apk/release/app-release.apk ../MojPlan.apk
+          else
+            echo "Nema ključa za potpis — pravim probnu (debug) verziju."
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk ../MojPlan.apk
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MojPlan-apk
+          path: MojPlan.apk
+
+      - name: Objavi verziju
+        if: env.HAS_KEY == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${APP_BUILD}" MojPlan.apk \
+            --title "Moj Plan v${APP_BUILD}" \
+            --notes "Preuzmi MojPlan.apk i instaliraj. Tvoji podaci ostaju." \
+            --latest
