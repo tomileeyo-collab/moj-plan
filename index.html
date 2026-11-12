@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1214">
+  <meta name="description" content="Trening, ishrana i suplementi na jednom mestu">
+  <title>Moj Plan</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar" id="topbar"></header>
+  <main id="view" class="view"></main>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="danas"><span class="ti">🏠</span><span>Danas</span></button>
+    <button data-tab="trening"><span class="ti">🏋️</span><span>Trening</span></button>
+    <button data-tab="ishrana"><span class="ti">🍽️</span><span>Ishrana</span></button>
+    <button data-tab="suplementi"><span class="ti">💊</span><span>Suplementi</span></button>
+    <button data-tab="vise"><span class="ti">📈</span><span>Napredak</span></button>
+  </nav>
+
+  <dialog id="dlg" class="dlg"></dialog>
+  <div id="focus" class="focus" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
