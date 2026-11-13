@@ -1,5 +1,5 @@
 // Offline rad: sve se kešira pri instalaciji.
-const CACHE = "mojplan-v4";
+const CACHE = "mojplan-v5";
 const FILES = [
   "./",
   "./index.html",

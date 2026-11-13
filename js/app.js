@@ -170,7 +170,7 @@ function toast(msg) {
 }
 function setTop(title, sub, back = false) {
   $("#topbar").innerHTML = `<div class="row">${back ? `<button class="icon-btn back" id="backBtn" aria-label="Nazad">‹</button>` : ""}<h1>${title}</h1><span class="grow"></span></div>${sub ? `<div class="sub">${sub}</div>` : ""}`;
-  if (back) $("#backBtn").addEventListener("click", () => { UI.sub = null; render(); toTop(); });
+  if (back) $("#backBtn").addEventListener("click", () => navBack());
 }
 
 function weekStrip(selDate, name) {
@@ -307,7 +307,7 @@ function renderToday() {
     else openDetail({ kind: "supp", id: r.s.id, time: r.time, date: t, rowId: r.s.noCheck ? null : r.id });
   }));
   $("#openTrain")?.addEventListener("click", () => { UI.trainDate = today(); go("trening"); });
-  $("#goMeasure")?.addEventListener("click", () => { UI.sub = "napredak"; go("vise"); });
+  $("#goMeasure")?.addEventListener("click", () => { go("vise"); openSub("napredak"); });
   $("#startNow")?.addEventListener("click", () => setStart(ymd(today())));
   $("#startSet")?.addEventListener("click", () => { const v = $("#startPick").value; if (v) setStart(v); });
 }
@@ -610,7 +610,7 @@ function renderMore() {
   for (const m of MORE_ITEMS) h += `<button class="menu-row" data-sub="${m.id}"><span class="mi">${m.icon}</span><span><b>${m.t}</b><span class="small muted">${m.s}</span></span><span class="chev">›</span></button>`;
   h += `</div><div class="small muted" style="text-align:center;margin-top:10px">Moj Plan${window.APP_BUILD ? " · verzija " + window.APP_BUILD : ""}</div>`;
   $("#view").innerHTML = h;
-  $$("[data-sub]").forEach((b) => b.addEventListener("click", () => { UI.sub = b.dataset.sub; render(); toTop(); }));
+  $$("[data-sub]").forEach((b) => b.addEventListener("click", () => openSub(b.dataset.sub)));
 }
 
 // ---------- jelovnik
@@ -1071,12 +1071,14 @@ async function checkUpdate() {
 // =====================================================================
 //  PROZORI + DUGME „NAZAD“ NA TELEFONU (zatvara prozor umesto da izađe iz aplikacije)
 // =====================================================================
+// U Android aplikaciji povratak (dugme ili prevlačenje sa ivice) hvata handleBack();
+// u browseru se koristi istorija browsera samo za prozore.
 let layerClose = null;
 function openLayer(fn) {
   const first = !layerClose; layerClose = fn;
-  if (first) { try { history.pushState({ layer: 1 }, ""); } catch (e) {} }
+  if (first && !isNative()) { try { history.pushState({ layer: 1 }, ""); } catch (e) {} }
 }
-function closeLayer() { if (!layerClose) return; layerClose = null; try { history.back(); } catch (e) {} }
+function closeLayer() { if (!layerClose) return; layerClose = null; if (!isNative()) { try { history.back(); } catch (e) {} } }
 window.addEventListener("popstate", () => { if (layerClose) { const f = layerClose; layerClose = null; f(); } });
 function showDialog() { const dlg = $("#dlg"); if (!dlg.open) dlg.showModal(); openLayer(() => { if (dlg.open) dlg.close(); }); }
 function closeDialog() { const dlg = $("#dlg"); if (dlg.open) dlg.close(); closeLayer(); }
@@ -1335,9 +1337,36 @@ function editKnowledge(id) {
 // =====================================================================
 //  ROUTER + PREVLAČENJE
 // =====================================================================
-function go(tab, anim) {
+// Istorija kretanja: povratak vraća tačno tamo gde si bio.
+const NAV = [];
+function pushNav() {
+  const top = NAV[NAV.length - 1];
+  if (top && top.tab === UI.tab && top.sub === UI.sub) return;
+  NAV.push({ tab: UI.tab, sub: UI.sub, y: $("#view").scrollTop });
+  if (NAV.length > 30) NAV.shift();
+}
+function go(tab, anim, noHistory) {
+  if (tab !== UI.tab && !noHistory) pushNav();
   if (tab !== UI.tab) UI.sub = null;
   UI.tab = tab; render(anim); toTop();
+}
+function openSub(sub) { pushNav(); UI.sub = sub; render("left"); toTop(); }
+function navBack() {
+  const prev = NAV.pop();
+  if (prev) {
+    UI.tab = prev.tab; UI.sub = prev.sub;
+    if (UI.tab === "trening") UI.trainDate = UI.trainDate || today();
+    render("right"); $("#view").scrollTop = prev.y || 0; return true;
+  }
+  if (UI.tab === "vise" && UI.sub) { UI.sub = null; render("right"); toTop(); return true; }
+  if (UI.tab !== "danas") { go("danas", "right", true); return true; }
+  return false;
+}
+// Povratak: prvo zatvori prozor/vežbu, pa vrati prethodni ekran, a izlaz tek sa početnog ekrana.
+window.__back = () => handleBack();
+function handleBack() {
+  if (layerClose) { const f = layerClose; layerClose = null; f(); return true; }
+  return navBack();
 }
 function render(anim) {
   $$("#tabbar button").forEach((b) => b.classList.toggle("on", b.dataset.tab === UI.tab));
@@ -1375,7 +1404,7 @@ function swipe(el, handler) {
 swipe(document.body, (dir) => {
   if (!$("#focus").hidden) return $("#focus")._swipe?.(dir);
   if ($("#dlg").open) return;
-  if (UI.tab === "vise" && UI.sub && dir === "right") { UI.sub = null; render("right"); toTop(); return; }
+  if (UI.tab === "vise" && UI.sub && dir === "right") { navBack(); return; }
   const i = TABS.indexOf(UI.tab), j = i + (dir === "left" ? 1 : -1);
   if (j < 0 || j >= TABS.length) return;
   if (TABS[j] === "trening") UI.trainDate = today();
@@ -1393,6 +1422,12 @@ document.addEventListener("visibilitychange", () => {
 load();
 render();
 try { navigator.storage?.persist?.(); } catch (e) {}
-if (isNative()) { Notif.init(); checkUpdate(); }
+if (isNative()) {
+  Notif.init(); checkUpdate();
+  try {
+    const App = window.Capacitor.Plugins.App;
+    App.addListener("backButton", () => { if (!handleBack()) App.exitApp(); });
+  } catch (e) {}
+}
 else if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
