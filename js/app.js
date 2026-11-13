@@ -62,6 +62,21 @@ function repairData(d) {
     const ow = DEFAULT_DATA.workouts[dow]; if (!ow) continue;
     w.items.forEach((it) => { if (it.iso === undefined) { const o = ow.items.find((x) => x.ex === it.ex); if (o && o.iso) it.iso = true; } });
   }
+  // v2: priprema za obroke, uputstva za suplemente, koraci za smuti (ne dira tvoje izmene)
+  for (const [id, om] of Object.entries(DEFAULT_DATA.meals)) {
+    const m = d.meals[id]; if (!m) continue;
+    if (!Array.isArray(m.prep)) m.prep = clone(om.prep || []);
+    if (m.mins == null && om.mins) m.mins = om.mins;
+  }
+  for (const m of Object.values(d.meals)) if (!Array.isArray(m.prep)) m.prep = [];
+  for (const s of d.supplements) {
+    const o = DEFAULT_DATA.supplements.find((x) => x.id === s.id); if (!o) continue;
+    if (!Array.isArray(s.how) && o.how) s.how = clone(o.how);
+    if (!s.why && o.why) s.why = o.why;
+    if (/^Svi prahovi/.test(s.note || "")) s.note = o.note;
+    if (s.id === "b12" && s.dose === "po uputstvu") s.dose = o.dose;
+  }
+  if (!Array.isArray(d.smoothie.steps)) d.smoothie.steps = clone(DEFAULT_DATA.smoothie.steps);
   return d;
 }
 function normalize() {
@@ -190,7 +205,7 @@ function buildDay(date) {
   const rows = [];
   for (const sl of slots) {
     if (sl.key === "trening") { rows.push({ type: "train", time: sl.time, id: "t", order: 1 }); continue; }
-    rows.push({ type: "meal", time: sl.time, id: "m:" + sl.key, label: sl.label, meal: D().meals[dt[sl.key]], order: 2 });
+    rows.push({ type: "meal", time: sl.time, id: "m:" + sl.key, label: sl.label, mealId: dt[sl.key], meal: D().meals[dt[sl.key]], order: 2 });
   }
   for (const s of D().supplements) {
     if (s.days === "train" && info.rest) continue;
@@ -274,23 +289,22 @@ function renderToday() {
     const can = !(r.type === "supp" && r.s.noCheck);
     h += `<div class="tl-row ${on ? "done" : ""}">
       <div class="time">${r.time}</div>
-      <div class="what"><div class="t"><span class="kind ${kind}"></span>${title}</div>${sub ? `<div class="s">${sub}</div>` : ""}</div>
+      <button class="what" data-open="${esc(r.id)}"><div class="t"><span class="kind ${kind}"></span>${title}<span class="more">›</span></div>${sub ? `<div class="s">${sub}</div>` : ""}</button>
       ${can ? `<button class="check ${on ? "on" : ""}" data-check="${esc(r.id)}" aria-label="Označi">✓</button>` : "<span></span>"}
     </div>`;
   }
   h += `</div>`;
+  const rowById = Object.fromEntries(rows.map((r) => [r.id, r]));
 
   const tm = addDays(t, 1), ti = planInfo(tm);
   h += `<div class="card mt small"><b>Sutra (${DAY_SHORT[tm.getDay()]}):</b> ${ti.workout ? `🏋️ ${esc(ti.workout.title)} — ${esc(ti.workout.subtitle)}` : "🧘 odmor"}. <span class="muted">Ne zaboravi da potopiš bademe uveče.</span></div>`;
 
   $("#view").innerHTML = h;
-  $$("[data-check]").forEach((b) => b.addEventListener("click", () => {
-    const k = ymd(t); S.checks[k] ||= {};
-    S.checks[k][b.dataset.check] = !S.checks[k][b.dataset.check];
-    if (!S.checks[k][b.dataset.check]) delete S.checks[k][b.dataset.check];
-    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
-    Notif.later(800);
-    render();
+  $$("[data-check]").forEach((b) => b.addEventListener("click", () => { toggleCheck(ymd(t), b.dataset.check); render(); }));
+  $$("[data-open]").forEach((b) => b.addEventListener("click", () => {
+    const r = rowById[b.dataset.open]; if (!r) return;
+    if (r.type === "meal") openDetail({ kind: "meal", id: r.mealId, time: r.time, label: r.label, date: t, rowId: r.id });
+    else openDetail({ kind: "supp", id: r.s.id, time: r.time, date: t, rowId: r.s.noCheck ? null : r.id });
   }));
   $("#openTrain")?.addEventListener("click", () => { UI.trainDate = today(); go("trening"); });
   $("#goMeasure")?.addEventListener("click", () => { UI.sub = "napredak"; go("vise"); });
@@ -375,7 +389,8 @@ function openFocus(items, idx) {
   const left = () => (endAt ? Math.max(0, Math.ceil((endAt - Date.now()) / 1000)) : 0);
   const stopTimer = (keepNotif) => { clearInterval(timerInt); timerInt = null; endAt = 0; if (!keepNotif) Notif.cancelRest(); };
   const mm = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-  const close = () => { stopTimer(); f.hidden = true; document.body.style.overflow = ""; };
+  const hide = () => { stopTimer(); f.hidden = true; document.body.style.overflow = ""; };
+  const close = () => { hide(); closeLayer(); };
   const move = (n) => { if (n < 0 || n >= items.length) return; stopTimer(); cur = n; draw(); f.scrollTop = 0; };
   const finish = () => {
     if (sameDay(UI.trainDate, today())) { const k = ymd(today()); S.checks[k] ||= {}; S.checks[k].t = true; save(); }
@@ -424,6 +439,7 @@ function openFocus(items, idx) {
   }
   f._swipe = (dir) => move(cur + (dir === "left" ? 1 : -1));
   f.hidden = false; document.body.style.overflow = "hidden"; draw();
+  openLayer(hide);
 }
 
 // =====================================================================
@@ -611,8 +627,8 @@ function renderNutrition() {
       continue;
     }
     const m = D().meals[dt[sl.key]];
-    h += `<div class="meal"><div class="time">${sl.time}</div><div><div class="lbl">${esc(sl.label)}</div>
-      <div class="nm">${m ? esc(m.name) : "—"}</div>${m ? `<ul>${m.items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</div>
+    h += `<div class="meal"><div class="time">${sl.time}</div><button class="what" data-open-meal="${esc(dt[sl.key] || "")}" data-time="${sl.time}" data-label="${esc(sl.label)}"><div class="lbl">${esc(sl.label)}</div>
+      <div class="nm">${m ? esc(m.name) : "—"}<span class="more">›</span></div>${m ? `<ul>${m.items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</button>
       <button class="icon-btn" data-meal-slot="${sl.key}" aria-label="Izmeni">✏️</button></div>`;
   }
   h += `</div><details class="acc"><summary>📋 Svi obroci (${Object.keys(D().meals).length})</summary><div class="acc-body">`;
@@ -620,6 +636,7 @@ function renderNutrition() {
   h += `</div></details>`;
   $("#view").innerHTML = h;
   bindWeekStrip("nu", () => UI.nutDate, (x) => (UI.nutDate = x));
+  $$("[data-open-meal]").forEach((b) => b.addEventListener("click", () => { if (b.dataset.openMeal) openDetail({ kind: "meal", id: b.dataset.openMeal, time: b.dataset.time, label: b.dataset.label, date: d }); }));
   $$("[data-meal-slot]").forEach((b) => b.addEventListener("click", () => editMealSlot(info.dayTypeKey, b.dataset.mealSlot)));
   $$("[data-meal-id]").forEach((b) => b.addEventListener("click", () => editMeal(b.dataset.mealId)));
 }
@@ -633,8 +650,8 @@ function renderSupps() {
   let h = `<div class="seg"><button data-st="train" class="${!isRest ? "on" : ""}">🏋️ Trening dan</button><button data-st="rest" class="${isRest ? "on" : ""}">🧘 Dan odmora</button></div><div class="card">`;
   const list = D().supplements.filter((s) => s.days === "all" || (s.days === "rest") === isRest).sort((a, b) => a.time.localeCompare(b.time));
   for (const s of list) {
-    h += `<div class="supp"><div class="time">${esc(s.time)}</div><div><div class="nm"><span class="kind c-${s.color || "gray"}"></span>${esc(s.name)} ${s.optional ? '<span class="badge">opciono</span>' : ""}</div>
-      ${s.dose ? `<div class="dose">${esc(s.dose)}</div>` : ""}<div class="note">${esc(s.note || "")}</div></div>
+    h += `<div class="supp"><div class="time">${esc(s.time)}</div><button class="what" data-open-supp="${esc(s.id)}"><div class="nm"><span class="kind c-${s.color || "gray"}"></span>${esc(s.name)} ${s.optional ? '<span class="badge">opciono</span>' : ""}<span class="more">›</span></div>
+      ${s.dose ? `<div class="dose">${esc(s.dose)}</div>` : ""}<div class="note">${esc(s.note || "")}</div></button>
       <button class="icon-btn" data-supp="${esc(s.id)}">✏️</button></div>`;
   }
   h += `<button class="btn block mt" id="addSupp">＋ Dodaj suplement</button></div>`;
@@ -642,6 +659,7 @@ function renderSupps() {
   h += `<div class="section-title">Recept <button class="icon-btn" id="editSmoothie">✏️</button></div>
   <div class="card"><h2>🥤 ${esc(sm.title)}</h2><div class="small muted" style="margin-bottom:6px">${esc(sm.subtitle)}</div>`;
   for (const i of sm.items) h += `<div class="ing"><div>${esc(i.name)}<div class="w">${esc(i.why)}</div></div><div class="q">${esc(i.dose)}</div></div>`;
+  if ((sm.steps || []).length) h += `<div class="sh-sec">Priprema</div><ol class="sh-ol">${sm.steps.map((t) => `<li>${esc(t)}</li>`).join("")}</ol>`;
   h += `<ul class="bul small muted">${sm.tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>`;
   h += `<div class="section-title">5 zlatnih pravila <button class="icon-btn" id="editGolden">✏️</button></div><div class="card">`;
   D().golden.forEach((g, i) => (h += `<div class="kv one"><span><b>${i + 1}. ${esc(g.t)}</b><br><span class="small muted">${esc(g.d)}</span></span></div>`));
@@ -657,6 +675,7 @@ function renderSupps() {
   $("#view").innerHTML = h;
   $$("[data-st]").forEach((b) => b.addEventListener("click", () => { UI.suppType = b.dataset.st; render(); }));
   $$("[data-supp]").forEach((b) => b.addEventListener("click", () => editSupp(b.dataset.supp)));
+  $$("[data-open-supp]").forEach((b) => b.addEventListener("click", () => openDetail({ kind: "supp", id: b.dataset.openSupp })));
   $("#addSupp").addEventListener("click", () => editSupp(null));
   $("#editSmoothie").addEventListener("click", editSmoothie);
   $("#editGolden").addEventListener("click", () => editPairs("5 zlatnih pravila", D().golden, (v) => (D().golden = v), "Naslov | objašnjenje"));
@@ -1050,6 +1069,86 @@ async function checkUpdate() {
 }
 
 // =====================================================================
+//  PROZORI + DUGME „NAZAD“ NA TELEFONU (zatvara prozor umesto da izađe iz aplikacije)
+// =====================================================================
+let layerClose = null;
+function openLayer(fn) {
+  const first = !layerClose; layerClose = fn;
+  if (first) { try { history.pushState({ layer: 1 }, ""); } catch (e) {} }
+}
+function closeLayer() { if (!layerClose) return; layerClose = null; try { history.back(); } catch (e) {} }
+window.addEventListener("popstate", () => { if (layerClose) { const f = layerClose; layerClose = null; f(); } });
+function showDialog() { const dlg = $("#dlg"); if (!dlg.open) dlg.showModal(); openLayer(() => { if (dlg.open) dlg.close(); }); }
+function closeDialog() { const dlg = $("#dlg"); if (dlg.open) dlg.close(); closeLayer(); }
+$("#dlg").addEventListener("close", () => { if (layerClose) closeLayer(); });
+
+function toggleCheck(dk, id) {
+  S.checks[dk] ||= {};
+  S.checks[dk][id] = !S.checks[dk][id];
+  if (!S.checks[dk][id]) delete S.checks[dk][id];
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  Notif.later(800);
+}
+
+// =====================================================================
+//  DETALJI STAVKE — šta ti treba, priprema, uz šta ide
+// =====================================================================
+function splitQty(line) {
+  const s = String(line).trim();
+  let m = s.match(/^(\d+)\s+(.+)$/);
+  if (m) return [m[2].charAt(0).toUpperCase() + m[2].slice(1), m[1] + " kom"];
+  m = s.match(/^(.*?)\s+(\d[\d.,]*(?:\s*[–-]\s*\d[\d.,]*)?\s*(?:g|ml|kom)?(?:\s.*)?)$/i);
+  if (m && m[1]) return [m[1], m[2]];
+  return [s, ""];
+}
+const DAYS_LABEL = { all: "svaki dan", train: "trening dan", rest: "dan odmora" };
+function openDetail({ kind, id, time, label, date, rowId }) {
+  const dlg = $("#dlg");
+  const dk = date ? ymd(date) : null;
+  const done = !!(dk && rowId && (S.checks[dk] || {})[rowId]);
+  const sec = (t) => `<div class="sh-sec">${esc(t)}</div>`;
+  const ol = (a) => `<ol class="sh-ol">${a.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>`;
+  const row = (a, b, w) => `<div class="ing"><div>${esc(a)}${w ? `<div class="w">${esc(w)}</div>` : ""}</div><div class="q">${esc(b)}</div></div>`;
+  let h = "", edit = null;
+  if (kind === "meal") {
+    const m = D().meals[id]; if (!m) return;
+    edit = () => editMeal(id);
+    h += `<div class="sh-head"><span class="badge">🍽️ Obrok</span><span class="small muted">${esc([time, label].filter(Boolean).join(" · "))}</span><span class="grow"></span><button class="icon-btn" data-sedit aria-label="Izmeni">✏️</button></div>
+      <h2 class="sh-title">${esc(m.name)}</h2>`;
+    h += sec("Šta ti treba") + m.items.map((x) => { const [a, b] = splitQty(x); return row(a, b); }).join("");
+    if ((m.prep || []).length) h += sec(`Priprema${m.mins ? ` · oko ${m.mins} min` : ""}`) + ol(m.prep);
+    if (date && time) {
+      const w = buildDay(date).rows.filter((r) => r.type === "supp" && r.time === time && !r.s.noCheck);
+      if (w.length) h += sec("Uz ovaj obrok") + w.map((r) => row(r.s.name, r.s.dose)).join("");
+    }
+  } else {
+    const s = D().supplements.find((x) => x.id === id); if (!s) return;
+    const sm = D().smoothie, isSm = s.id === "smuti";
+    edit = isSm ? editSmoothie : () => editSupp(id);
+    h += `<div class="sh-head"><span class="badge purple">💊 Suplement</span><span class="small muted">${esc([time || s.time, DAYS_LABEL[s.days]].filter(Boolean).join(" · "))}</span><span class="grow"></span><button class="icon-btn" data-sedit aria-label="Izmeni">✏️</button></div>
+      <h2 class="sh-title">${esc(isSm ? sm.title : s.name)}</h2>`;
+    if (isSm) {
+      h += sec("Šta ti treba") + sm.items.map((i) => row(i.name, i.dose, i.why)).join("");
+      if ((sm.steps || []).length) h += sec("Priprema · 2 min") + ol(sm.steps);
+      if ((sm.tips || []).length) h += sec("Saveti") + `<ul class="bul small">${sm.tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`;
+    } else {
+      if (s.dose) h += row("Doza", s.dose);
+      if ((s.how || []).length) h += sec("Kako") + ol(s.how);
+      if (s.why) h += sec("Zašto") + `<p class="small">${esc(s.why)}</p>`;
+      if (s.note) h += `<div class="sh-note">${esc(s.note)}</div>`;
+    }
+  }
+  h += `<div class="sh-btns"><button class="btn" data-sx>Zatvori</button>${dk && rowId ? `<button class="btn ${done ? "" : "primary"}" data-sdone>${done ? "↺ Poništi" : "✓ Urađeno"}</button>` : ""}</div>`;
+  dlg.innerHTML = `<div class="sheet"><div class="grab"></div>${h}</div>`;
+  $("[data-sx]", dlg).onclick = closeDialog;
+  $("[data-sedit]", dlg).onclick = () => edit();
+  const bd = $("[data-sdone]", dlg);
+  if (bd) bd.onclick = () => { toggleCheck(dk, rowId); closeDialog(); render(); if (!done) toast("✅ Urađeno"); };
+  showDialog();
+  dlg.scrollTop = 0;
+}
+
+// =====================================================================
 //  DIALOG / FORME ZA IZMENE
 // =====================================================================
 function openForm({ title, fields, onSave, onDelete, extra = [] }) {
@@ -1070,12 +1169,13 @@ function openForm({ title, fields, onSave, onDelete, extra = [] }) {
   h += `<span class="grow"></span><button class="btn" data-x>Otkaži</button><button class="btn primary" data-ok>Sačuvaj</button></div>`;
   dlg.innerHTML = h;
   const vals = () => { const o = {}; fields.forEach((f) => { if (f.key) o[f.key] = $(`[name="${f.key}"]`, dlg).value; }); return o; };
-  const close = () => dlg.close();
+  const close = closeDialog;
   $$("[data-x]", dlg).forEach((b) => (b.onclick = close));
   $("[data-ok]", dlg).onclick = () => { if (onSave(vals()) !== false) { save(); close(); render(); toast("✅ Sačuvano"); } };
   if (onDelete) $("[data-del]", dlg).onclick = () => { if (confirm("Sigurno obrisati?")) { onDelete(); save(); close(); render(); } };
   $$("[data-extra]", dlg).forEach((b) => (b.onclick = () => { const r = extra[+b.dataset.extra].fn(vals()); if (r !== false) { save(); close(); render(); } }));
-  dlg.showModal();
+  showDialog();
+  dlg.scrollTop = 0;
 }
 const lines = (s) => String(s).split("\n").map((x) => x.trim()).filter(Boolean);
 const toPairs = (s) => lines(s).map((l) => { const [t, ...d] = l.split("|"); return { t: t.trim(), d: d.join("|").trim() }; });
@@ -1123,7 +1223,7 @@ function editItem(dow, idx) {
   if (!isNew) {
     if (idx > 0) extra.push({ label: "↑", fn: () => { w.items.splice(idx - 1, 0, w.items.splice(idx, 1)[0]); } });
     if (idx < w.items.length - 1) extra.push({ label: "↓", fn: () => { w.items.splice(idx + 1, 0, w.items.splice(idx, 1)[0]); } });
-    extra.push({ label: "📝 Opis vežbe", fn: () => { setTimeout(() => editExercise(it.ex), 50); } });
+    extra.push({ label: "📝 Opis vežbe", fn: () => { editExercise(it.ex); return false; } });
   }
   openForm({
     title: isNew ? "Nova vežba u treningu" : "Izmeni vežbu",
@@ -1161,7 +1261,10 @@ function editExercise(id) {
 const mealFields = (m) => [
   { key: "name", label: "Naziv obroka", value: m.name },
   { key: "items", label: "Namirnice (jedna po redu, sa količinom — npr. „Tofu 200 g“)", type: "textarea", rows: 7, value: m.items.join("\n") },
+  { key: "prep", label: "Priprema (jedan korak po redu)", type: "textarea", rows: 6, value: (m.prep || []).join("\n") },
+  { key: "mins", label: "Vreme pripreme (min)", type: "number", value: m.mins ?? "" },
 ];
+const saveMeal = (m, v) => { m.name = v.name; m.items = lines(v.items); m.prep = lines(v.prep); m.mins = parseInt(v.mins, 10) || null; };
 function editMealSlot(dtKey, slot) {
   const dt = D().dayTypes[dtKey], curId = dt[slot], m = D().meals[curId];
   const opts = Object.entries(D().meals).map(([id, x]) => ({ v: id, l: x.name }));
@@ -1173,13 +1276,13 @@ function editMealSlot(dtKey, slot) {
       ...(m ? mealFields(m) : []),
       { type: "info", html: "Izmena naziva i namirnica važi svuda gde se ovaj obrok javlja. Kupovina se sama preračuna." },
     ],
-    onSave: (v) => { if (m && v.pick === curId) { m.name = v.name; m.items = lines(v.items); } dt[slot] = v.pick; },
-    extra: [{ label: "＋ Novi obrok", fn: () => { const id = "c_" + uid(); D().meals[id] = { name: "Novi obrok", items: [] }; dt[slot] = id; setTimeout(() => editMeal(id), 50); } }],
+    onSave: (v) => { if (m && v.pick === curId) saveMeal(m, v); dt[slot] = v.pick; },
+    extra: [{ label: "＋ Novi obrok", fn: () => { const id = "c_" + uid(); D().meals[id] = { name: "Novi obrok", items: [], prep: [] }; dt[slot] = id; save(); editMeal(id); return false; } }],
   });
 }
 function editMeal(id) {
   const m = D().meals[id];
-  openForm({ title: "Izmeni obrok", fields: mealFields(m), onSave: (v) => { m.name = v.name; m.items = lines(v.items); } });
+  openForm({ title: "Izmeni obrok", fields: mealFields(m), onSave: (v) => saveMeal(m, v) });
 }
 function editSupp(id) {
   const isNew = !id;
@@ -1192,12 +1295,14 @@ function editSupp(id) {
       { key: "time", label: "Vreme", type: "time", value: s.time },
       { key: "days", label: "Kada", type: "select", value: s.days, options: [{ v: "all", l: "Svaki dan" }, { v: "train", l: "Samo trening dan" }, { v: "rest", l: "Samo dan odmora" }] },
       { key: "note", label: "Napomena", type: "textarea", rows: 3, value: s.note },
+      { key: "how", label: "Kako se uzima (jedan korak po redu)", type: "textarea", rows: 4, value: (s.how || []).join("\n") },
+      { key: "why", label: "Zašto", type: "textarea", rows: 2, value: s.why || "" },
       { key: "color", label: "Boja", type: "select", value: s.color, options: [{ v: "green", l: "Zelena (prah/smuti)" }, { v: "purple", l: "Ljubičasta (kapsule)" }, { v: "orange", l: "Narandžasta (sport)" }, { v: "blue", l: "Plava (uveče/čaj)" }, { v: "brown", l: "Braon (hrana)" }, { v: "gray", l: "Siva (podsetnik)" }] },
       { key: "optional", label: "Opciono?", type: "select", value: s.optional ? "1" : "0", options: [{ v: "0", l: "Ne" }, { v: "1", l: "Da" }] },
     ],
     onSave: (v) => {
       if (!v.name.trim()) { toast("Upiši naziv"); return false; }
-      Object.assign(s, { name: v.name.trim(), dose: v.dose, time: v.time || "08:00", days: v.days, note: v.note, color: v.color, optional: v.optional === "1" });
+      Object.assign(s, { name: v.name.trim(), dose: v.dose, time: v.time || "08:00", days: v.days, note: v.note, how: lines(v.how), why: v.why.trim(), color: v.color, optional: v.optional === "1" });
       if (isNew) D().supplements.push(s);
     },
     onDelete: isNew ? null : () => { D().supplements = D().supplements.filter((x) => x.id !== id); },
@@ -1209,9 +1314,10 @@ function editSmoothie() {
     { key: "title", label: "Naziv", value: sm.title },
     { key: "subtitle", label: "Kratko uputstvo", value: sm.subtitle },
     { key: "items", label: "Sastojci: naziv | količina | zašto", type: "textarea", rows: 10, value: sm.items.map((i) => `${i.name} | ${i.dose} | ${i.why}`).join("\n") },
+    { key: "steps", label: "Priprema (jedan korak po redu)", type: "textarea", rows: 6, value: (sm.steps || []).join("\n") },
     { key: "tips", label: "Saveti (jedan po redu)", type: "textarea", rows: 4, value: sm.tips.join("\n") }],
     onSave: (v) => {
-      sm.title = v.title; sm.subtitle = v.subtitle; sm.tips = lines(v.tips);
+      sm.title = v.title; sm.subtitle = v.subtitle; sm.tips = lines(v.tips); sm.steps = lines(v.steps);
       sm.items = lines(v.items).map((l) => { const [a = "", b = "", c = ""] = l.split("|").map((x) => x.trim()); return { name: a, dose: b, why: c }; });
     } });
 }

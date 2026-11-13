@@ -298,3 +298,19 @@ body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; min
 .tabbar { position: relative; left: auto; right: auto; bottom: auto; flex: none; }
 .toast { bottom: calc(84px + var(--safe-b)); }
 .hist-wrap { overflow-x: auto; touch-action: pan-x pan-y; }
+
+/* ---------- v4: detalji stavke ---------- */
+button.what { background: none; border: 0; padding: 0; margin: 0; text-align: left; width: 100%; color: inherit; font: inherit; cursor: pointer; display: block; min-width: 0; }
+.more { color: var(--muted); margin-left: 6px; font-weight: 400; }
+.sheet { padding: 6px 16px calc(16px + var(--safe-b)); }
+.grab { width: 42px; height: 5px; border-radius: 3px; background: var(--line); margin: 6px auto 12px; }
+.sh-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sh-head .badge { margin: 0; }
+.sh-title { font-size: 22px; font-weight: 750; margin: 8px 0 2px; }
+.sh-sec { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); margin: 18px 0 6px; }
+.sh-ol { margin: 0; padding-left: 22px; }
+.sh-ol li { margin: 7px 0; line-height: 1.45; }
+.sh-note { background: rgba(255, 181, 71, .12); color: var(--orange); border-radius: 12px; padding: 10px 12px; margin-top: 14px; font-size: 14px; }
+.sh-btns { display: flex; gap: 8px; margin-top: 20px; position: sticky; bottom: 0; background: var(--bg2); padding: 8px 0 4px; }
+.sh-btns .btn { flex: 1; padding: 13px; }
+.dlg { overflow-y: auto; }
