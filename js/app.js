@@ -74,7 +74,23 @@ function repairData(d) {
     if (!Array.isArray(s.how) && o.how) s.how = clone(o.how);
     if (!s.why && o.why) s.why = o.why;
     if (/^Svi prahovi/.test(s.note || "")) s.note = o.note;
-    if (s.id === "b12" && s.dose === "po uputstvu") s.dose = o.dose;
+  }
+  // v3: samo ono što je u tvom planu — bez B12 i omega-3 kapsula koje sam ja dodao,
+  // jedan šejk posle treninga (protein + kreatin), rastavić i smokve van obroka
+  if (!(d.version >= 3)) {
+    const def = (id) => DEFAULT_DATA.supplements.find((x) => x.id === id);
+    d.supplements = d.supplements.filter((s) => !["b12", "omega", "kreatin"].includes(s.id));
+    for (const s of d.supplements) {
+      if (s.id === "protein" || s.id === "kreatin_o" || s.id === "k2") Object.assign(s, clone(def(s.id)));
+      if (s.id === "rastavic" && s.time === "16:30") s.time = def("rastavic").time;
+      if (s.id === "smokve" && s.time === "17:00") Object.assign(s, { time: def("smokve").time, note: def("smokve").note });
+    }
+    d.smoothie.items = clone(DEFAULT_DATA.smoothie.items);
+    d.combos = clone(DEFAULT_DATA.combos);
+    d.dailyCore = clone(DEFAULT_DATA.dailyCore);
+    const k = d.knowledge.find((x) => x.id === "alternative"); if (k) k.body = k.body.replace("- Laneno seme, chia, orasi (ALA) — za DHA/EPA najbolje ulje iz algi", "- Laneno seme, chia seme, orasi");
+    const sh = d.shops.find((x) => /K2 Komplex/.test(x.what) && x.where === "apoteka"); if (sh) sh.where = "";
+    d.version = 3;
   }
   if (!Array.isArray(d.smoothie.steps)) d.smoothie.steps = clone(DEFAULT_DATA.smoothie.steps);
   return d;
@@ -106,6 +122,8 @@ function load() {
   }
   const lim = ymd(addDays(today(), -60));
   for (const k of Object.keys(S.checks)) if (k < lim) delete S.checks[k];
+  // sačuvaj odmah posle popravke/prelaska na novu verziju podataka (da se ne radi pri svakom otvaranju)
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
 }
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); }
@@ -129,7 +147,8 @@ function planInfo(date) {
   const monthIdx = Math.floor(wiC / 4);
   const month = D().months[monthIdx] || D().months[D().months.length - 1];
   const wim = (wiC % 4) + 1;
-  const deload = wim === 4 || (!!month.deloadWeek1 && wim === 1);
+  // deload: 4. nedelja; u mesecima 4, 7 i 10 deload je 1. nedelja (mesec 7: nedelje 2–4 idu ka mini rekordu)
+  const deload = month.deloadWeek1 ? wim === 1 : wim === 4;
   const dow = date.getDay();
   const mealWeek = wi % 4;
   const dayTypeKey = D().mealRotation[mealWeek][(dow + 6) % 7];
@@ -198,6 +217,15 @@ function planLine(info) {
 // =====================================================================
 //  DANAS
 // =====================================================================
+function almondsIn(date) {
+  const info = planInfo(date), dt = D().dayTypes[info.dayTypeKey] || {};
+  let g = 0;
+  for (const sl of info.rest ? D().slotsRest : D().slotsTraining) {
+    const m = D().meals[dt[sl.key]]; if (!m) continue;
+    for (const it of m.items) if (/badem/i.test(it)) { const p = parseItem(it); if (p && p.qty && p.unit === "g") g += p.qty; }
+  }
+  return g;
+}
 function buildDay(date) {
   const info = planInfo(date);
   const dt = D().dayTypes[info.dayTypeKey] || {};
@@ -207,9 +235,15 @@ function buildDay(date) {
     if (sl.key === "trening") { rows.push({ type: "train", time: sl.time, id: "t", order: 1 }); continue; }
     rows.push({ type: "meal", time: sl.time, id: "m:" + sl.key, label: sl.label, mealId: dt[sl.key], meal: D().meals[dt[sl.key]], order: 2 });
   }
-  for (const s of D().supplements) {
-    if (s.days === "train" && info.rest) continue;
-    if (s.days === "rest" && !info.rest) continue;
+  for (const s0 of D().supplements) {
+    if (s0.days === "train" && info.rest) continue;
+    if (s0.days === "rest" && !info.rest) continue;
+    let s = s0;
+    if (s0.id === "bademi") {
+      // potopi onoliko badema koliko treba sutra: smokve + bademi (osnova) + bademi iz sutrašnjih obroka
+      const base = parseInt(s0.dose, 10) || 20, extra = almondsIn(addDays(date, 1));
+      if (extra) s = { ...s0, dose: `${base + extra} g u vodu`, note: `${base} g za smokve + ${extra} g za sutrašnju užinu. ${s0.note || ""}`.trim() };
+    }
     rows.push({ type: "supp", time: s.time, id: "s:" + s.id, s, order: 0 });
   }
   rows.sort((a, b) => a.time.localeCompare(b.time) || a.order - b.order);
@@ -255,7 +289,7 @@ function renderToday() {
 
   const checkable = rows.filter((r) => !(r.type === "supp" && r.s.noCheck));
   const done = checkable.filter((r) => checks[r.id]).length;
-  h += `<div class="row-between small muted"><span>${info.rest ? "🧘 Dan odmora" : "🏋️ Trening dan"} · ${esc((D().dayTypes[info.dayTypeKey] || {}).label || "")}</span><span>${done}/${checkable.length}</span></div>
+  h += `<div class="row-between small muted"><span>${info.rest ? "🧘 Dan odmora" : `🏋️ Trening dan · ${esc(info.workout.title)}`}</span><span>Urađeno ${done}/${checkable.length}</span></div>
         <div class="progress" style="margin-bottom:14px"><i style="width:${checkable.length ? (done / checkable.length) * 100 : 0}%"></i></div>`;
 
   if (info.rest) {
@@ -297,7 +331,7 @@ function renderToday() {
   const rowById = Object.fromEntries(rows.map((r) => [r.id, r]));
 
   const tm = addDays(t, 1), ti = planInfo(tm);
-  h += `<div class="card mt small"><b>Sutra (${DAY_SHORT[tm.getDay()]}):</b> ${ti.workout ? `🏋️ ${esc(ti.workout.title)} — ${esc(ti.workout.subtitle)}` : "🧘 odmor"}. <span class="muted">Ne zaboravi da potopiš bademe uveče.</span></div>`;
+  h += `<div class="card mt small"><b>Sutra (${DAY_SHORT[tm.getDay()]}):</b> ${ti.workout ? `🏋️ ${esc(ti.workout.title)} — ${esc(ti.workout.subtitle)}` : "🧘 odmor"}.</div>`;
 
   $("#view").innerHTML = h;
   $$("[data-check]").forEach((b) => b.addEventListener("click", () => { toggleCheck(ymd(t), b.dataset.check); render(); }));
@@ -510,7 +544,7 @@ function parseItem(line) {
   if (m) return { name: m[1].trim(), qty: +String(m[3] || m[2]).replace(",", "."), unit: (m[4] || "kom").toLowerCase() };
   return { name: s, qty: null, unit: "" };
 }
-function shoppingFor(monday) {
+function shoppingFor(from, days = 7) {
   const acc = {};
   const add = (raw) => {
     for (const part of String(raw).split(/\s\+\s/)) {
@@ -529,8 +563,8 @@ function shoppingFor(monday) {
       if (qty != null) acc[k].qty += qty;
     }
   };
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(monday, i), info = planInfo(d);
+  for (let i = 0; i < days; i++) {
+    const d = addDays(from, i), info = planInfo(d);
     const dt = D().dayTypes[info.dayTypeKey] || {};
     for (const sl of info.rest ? D().slotsRest : D().slotsTraining) {
       const m = D().meals[dt[sl.key]]; if (m) m.items.forEach(add);
@@ -551,12 +585,14 @@ function fmtQty(x) {
 function renderShopping() {
   const t = today();
   if (UI.shopNext === null) UI.shopNext = t.getDay() === 6 || t.getDay() === 0;
+  // "Ova nedelja" = od danas do nedelje (prošli dani se ne kupuju); "Sledeća" = ceo naredni ponedeljak–nedelja
   const mon = UI.shopNext ? addDays(mondayOf(t), 7) : mondayOf(t);
+  const from = UI.shopNext ? mon : t;
   const sun = addDays(mon, 6);
   const wk = ymd(mon);
   const got = (S.shop[wk] ||= {});
-  setTop("Kupovina", `${fmtShort(mon)} – ${fmtShort(sun)} · sabrano iz jelovnika`);
-  const list = shoppingFor(mon);
+  setTop("Kupovina", `${fmtShort(from)} – ${fmtShort(sun)} · sabrano iz jelovnika`);
+  const list = shoppingFor(from, diffDays(sun, from) + 1);
   const total = list.length + S.shopExtra.length;
   const doneN = list.filter((x) => got[x.name]).length + S.shopExtra.filter((x) => got["+" + x]).length;
   let h = `<div class="seg"><button data-sn="0" class="${!UI.shopNext ? "on" : ""}">Ova nedelja</button><button data-sn="1" class="${UI.shopNext ? "on" : ""}">Sledeća nedelja</button></div>
@@ -1119,10 +1155,6 @@ function openDetail({ kind, id, time, label, date, rowId }) {
       <h2 class="sh-title">${esc(m.name)}</h2>`;
     h += sec("Šta ti treba") + m.items.map((x) => { const [a, b] = splitQty(x); return row(a, b); }).join("");
     if ((m.prep || []).length) h += sec(`Priprema${m.mins ? ` · oko ${m.mins} min` : ""}`) + ol(m.prep);
-    if (date && time) {
-      const w = buildDay(date).rows.filter((r) => r.type === "supp" && r.time === time && !r.s.noCheck);
-      if (w.length) h += sec("Uz ovaj obrok") + w.map((r) => row(r.s.name, r.s.dose)).join("");
-    }
   } else {
     const s = D().supplements.find((x) => x.id === id); if (!s) return;
     const sm = D().smoothie, isSm = s.id === "smuti";
@@ -1385,6 +1417,7 @@ $$("#tabbar button").forEach((b) => b.addEventListener("click", () => {
   const t = b.dataset.tab;
   if (t === "trening" && UI.tab !== "trening") UI.trainDate = today();
   if (t === "vise" && UI.tab === "vise") UI.sub = null;
+  if (t === "danas") { NAV.length = 0; return go(t, null, true); } // Danas je početak: odatle povratak izlazi
   go(t);
 }));
 

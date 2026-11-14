@@ -6,7 +6,7 @@
 // =====================================================================
 
 const DEFAULT_DATA = {
-  version: 2,
+  version: 3,
 
   // ------------------------------------------------------------------
   //  VEŽBE (biblioteka) — slika: img/ex/<id>-0.jpg i -1.jpg
@@ -329,31 +329,22 @@ const DEFAULT_DATA = {
   supplements: [
     { id: "smuti", time: "07:30", days: "all", name: "Jutarnji smuti „Kosti & zubi“", dose: "1 čaša", note: "Spirulina, hlorela, pšenična trava, ječmena trava, kopriva, šipurak, bundeva semenke, kolagen, ½ banane, sok od narandže. Popiti odmah.", color: "green",
       why: "Minerali, vitamin C i kolagen za kosti, zube i desni." },
-    { id: "k2", time: "07:30", days: "all", name: "Dr. Viton K2 Komplex", dose: "1 kapsula", note: "Uz smuti. Već ima D3 + K2 + Ca + Mg + Zn → posebno D3 ne treba.", color: "purple",
-      how: ["1 kapsula uz smuti (bolje se upija uz malo masti, npr. bundeva semenke iz smutija)."],
-      why: "D3 i K2 usmeravaju kalcijum u kosti i zube, a Ca, Mg i Zn su gradivni minerali." },
-    { id: "b12", time: "08:00", days: "all", name: "Vitamin B12", dose: "1 tableta (doza sa kutije)", note: "Uz doručak. Spirulina NIJE pouzdan izvor B12.", color: "purple",
-      how: ["1 tableta ili kapsula uz doručak, doza kao na kutiji."],
-      why: "Bez mesa B12 skoro da nema u hrani, a B12 iz spiruline telo ne koristi." },
-    { id: "omega", time: "08:00", days: "all", name: "Omega-3 (iz algi)", dose: "250–500 mg DHA+EPA", note: "Uz doručak. Ako ga nemaš — lan 10 g + orasi su minimum.", color: "purple",
-      how: ["1 kapsula uz doručak (uz obrok sa malo masti)."],
-      why: "DHA i EPA za srce, mozak i manje upala." },
+    { id: "k2", time: "07:30", days: "all", name: "Dr. Viton K2 Komplex", dose: "1 kapsula", note: "Uz smuti. D3 + K2 (MK-7) + Ca + Mg + Zn.", color: "purple",
+      how: ["1 kapsula uz smuti."],
+      why: "D3 apsorbuje kalcijum, K2 ga usmerava u kosti i zube — ne u arterije." },
     { id: "kafa", time: "08:30", days: "all", name: "Kafa — tek sada", dose: "", note: "Najranije 60 min posle smutija (tanini blokiraju gvožđe i cink).", color: "gray", noCheck: true,
       how: ["Kafa najranije 60 min posle smutija."],
       why: "Tanini i kofein blokiraju gvožđe, cink i magnezijum iz smutija." },
-    { id: "protein", time: "13:30", days: "train", name: "Vege protein (grašak + pirinač)", dose: "30–40 g", note: "Šejk posle treninga.", color: "orange",
-      how: ["30–40 g (1–1,5 merica) promućkaj u šejkeru sa 300–400 ml vode ili biljnog mleka.","U isti šejk dodaj kreatin 5 g.","Popij u roku od sat vremena posle treninga."],
-      why: "Oporavak i rast mišića." },
-    { id: "kreatin", time: "13:30", days: "train", name: "Kreatin monohidrat", dose: "5 g", note: "U šejk posle treninga. Svaki dan, bez pauze.", color: "orange",
-      how: ["5 g (1 ravna merica) umešaj u šejk posle treninga.","Svaki dan, bez pauze."],
-      why: "Više snage, veći volumen treninga i brži oporavak." },
+    { id: "protein", time: "13:30", days: "train", name: "Šejk posle treninga", dose: "Vege protein 30–40 g + kreatin 5 g", note: "Jedan šejk: protein i kreatin zajedno.", color: "orange",
+      how: ["U šejker stavi 30–40 g vege proteina (grašak + pirinač) i 5 g kreatina monohidrata.", "Dodaj 300–400 ml vode ili biljnog mleka i promućkaj.", "Popij odmah posle treninga."],
+      why: "Protein za oporavak i rast mišića; kreatin za snagu i oporavak." },
     { id: "kreatin_o", time: "14:00", days: "rest", name: "Kreatin monohidrat", dose: "5 g", note: "Uz ručak — i na dan odmora.", color: "orange",
-      how: ["5 g (1 ravna merica) u čaši vode ili soka uz ručak.","I na dan odmora, bez pauze."],
-      why: "Mišići ostaju puni kreatina i za sledeći trening." },
-    { id: "rastavic", time: "16:30", days: "all", name: "Čaj od rastavića", dose: "1 šolja", note: "Odvojeno od obroka. 3 meseca piješ, pa 1 mesec pauza.", color: "blue",
+      how: ["5 g kreatina u čaši vode ili soka, uz ručak."],
+      why: "Kreatin se uzima svaki dan, i kad ne treniraš." },
+    { id: "rastavic", time: "15:30", days: "all", name: "Čaj od rastavića", dose: "1 šolja", note: "Odvojeno od obroka. 3 meseca piješ, pa 1 mesec pauza.", color: "blue",
       how: ["1 kašiku suvog rastavića prelij sa 250 ml vrele (ne ključale) vode.","Poklopi i ostavi 10–15 min, pa procedi.","Pij odvojeno od obroka, ne u smutiju."],
       why: "Silicijum za kolagen, kosti i nokte." },
-    { id: "smokve", time: "17:00", days: "all", name: "Suve smokve + bademi", dose: "3 kom + 20 g", note: "Užina za kosti. Bademe potopi prethodne večeri.", color: "brown",
+    { id: "smokve", time: "18:30", days: "all", name: "Suve smokve + bademi", dose: "3 kom + 20 g", note: "Grickalica između obroka. Bademi potopljeni od prethodne večeri.", color: "brown",
       how: ["Pojedi 3 suve smokve i 20 g badema (potopljenih od prethodne večeri, oceđenih)."],
       why: "Kalcijum, kalijum i magnezijum za kosti." },
     { id: "mg", time: "22:00", days: "all", name: "Magnezijum bisglicinat", dose: "200–300 mg", note: "Opciono — ako imaš grčeve, loš san ili stres.", color: "blue", optional: true,
@@ -368,16 +359,16 @@ const DEFAULT_DATA = {
     title: "Jutarnji smuti „Kosti & zubi“",
     subtitle: "Blendati 30–40 s · popiti odmah · ne čuvati",
     items: [
-      { name: "Spirulina prah", dose: "1 kašičica (3–5 g)", why: "Minerali, proteini" },
-      { name: "Hlorela prah", dose: "1 kašičica (3–5 g)", why: "Mg, Zn, detoks" },
+      { name: "Spirulina prah", dose: "1 kašičica", why: "Minerali, B12, detoks" },
+      { name: "Hlorela prah", dose: "1 kašičica", why: "Pojačava detoks, Mg, Zn" },
       { name: "Pšenična trava prah", dose: "1 kašičica", why: "Vitamin C, E, imunitet" },
-      { name: "Ječmena trava prah", dose: "1 kašičica", why: "Vitamin K, kalcijum" },
+      { name: "Ječmena trava prah", dose: "1 kašičica", why: "Vitamin K, B12, Ca" },
       { name: "Kopriva mlevena", dose: "1 kašičica", why: "Silicijum, Ca, Mg" },
       { name: "Šipurak ili acerola prah", dose: "1 kašičica", why: "Prirodni vitamin C — obavezan!" },
-      { name: "Semenke bundeve mlevene", dose: "1 kašika (15 g)", why: "Cink, Mg, glicin" },
-      { name: "Kolagen tip 1 (Puori CP1)", dose: "1 merica (≈10 g)", why: "Kosti, zubi, desni" },
-      { name: "Banana", dose: "½ komada", why: "Maskira gorčinu algi" },
-      { name: "Sok od narandže", dose: "200 ml", why: "Vitamin C → bolja apsorpcija" },
+      { name: "Semenke bundeve mlevene", dose: "1 kašika", why: "Glicin, prolin, Zn, Mg" },
+      { name: "Kolagen tip 1 (Puori CP1)", dose: "1 merica", why: "Direktni kolagen za kosti, zube i desni" },
+      { name: "Banana", dose: "½ komada", why: "Maskira gorčinu algi, kalijum" },
+      { name: "Sok od narandže", dose: "200 ml", why: "Vitamin C pojačava apsorpciju gvožđa" },
       { name: "Voda", dose: "100 ml", why: "Konzistencija" },
     ],
     steps: [
@@ -410,30 +401,27 @@ const DEFAULT_DATA = {
       { t: "Leblebije + limun", d: "Aminokiseline + vitamin C." },
       { t: "Bademi (potopljeni) + smokve", d: "Kalcijum + kalijum — užina za kosti." },
       { t: "Magnezijum (uveče) + san", d: "Bez sna nema oporavka." },
-      { t: "Kreatin + šejk posle treninga", d: "Najlakše da ga ne zaboraviš." },
     ],
     bad: [
       { t: "Smuti + kafa odmah", d: "Tanini blokiraju gvožđe i cink — čekaj 60 min." },
       { t: "Rastavić duže od 3 meseca", d: "Može da optereti bubrege. 3 meseca pa 1 mesec pauza." },
       { t: "Spirulina + crni čaj", d: "Isti problem kao kafa. Zeleni čaj manje smeta." },
-      { t: "Duplo D3", d: "K2 Komplex već ima D3 — ne uzimaj još jedan D3 bez provere sa lekarom." },
     ],
   },
   results: "Energija i san: 2–3 nedelje · Nokti i kosa: 4–6 nedelja · Desni i zubi: 6–10 nedelja · Gustina kostiju: 3–6 meseci. Procesi su spori ali trajni — ne odustaj.",
 
   dailyCore: [
-    { t: "Omega-3", d: "Mleveni lan 10 g dnevno (+/ili chia 10 g), orasi 20–30 g često." },
-    { t: "Cink i magnezijum", d: "Bundeva semenke 25–30 g, mahunarke svaki dan." },
-    { t: "Kalcijum (bez mleka)", d: "Tahini/susam 15–20 g ili mak, tofu sa kalcijumom, brokoli/kelj, mladi sir 50–100 g." },
-    { t: "Gvožđe", d: "Mahunarke + vitamin C u istom obroku (paprika, limun, narandža)." },
-    { t: "Jod", d: "Jodirana so u kući. Nori alge povremeno (ne preterivati)." },
+    { t: "Omega-3 (biljno)", d: "Mleveni lan 10 g dnevno (najlakše u kašu/smuti), i/ili chia 10 g, orasi 20–30 g (ne moraju svaki dan, ali često)." },
+    { t: "Minerali (cink, magnezijum, gvožđe)", d: "Bundeva semenke 25–30 g, susam/tahini 15–20 g ili mak, mahunarke svaki dan: sočivo/pasulj/leblebije 250–350 g kuvano." },
+    { t: "Kalcijum (bez mleka, uz malo sira)", d: "Tofu sa kalcijumom (ako ga nađeš), susam/tahini, brokoli/kupus/kelj, mladi sir 50–100 g ili feta 30–50 g." },
+    { t: "Jod", d: "Jodirana so u kući. Ako koristiš alge kao hranu: mala količina nori povremeno (ne preterivati)." },
   ],
 
   shops: [
     { what: "Spirulina, hlorela, pšenična trava", where: "Zdrava priča / We Are One", price: "3650 din" },
     { what: "Kreatin (Ultimate Nutrition)", where: "Supplement Store", price: "1800 din" },
     { what: "Protein pirinač + grašak", where: "Prečicom do zdravlja", price: "1900 din" },
-    { what: "Dr. Viton K2 Komplex", where: "apoteka", price: "" },
+    { what: "Dr. Viton K2 Komplex", where: "", price: "" },
     { what: "Puori CP1 kolagen", where: "", price: "" },
     { what: "Kopriva, šipurak, rastavić", where: "biljna apoteka", price: "" },
   ],
@@ -495,7 +483,7 @@ Kolagen tip I | 5–10 g` },
 ## San (umesto melatonina)
 - Čaj od kamilice, lavanda, valerijana (čaj ili tinktura pre spavanja)
 ## Omega-3 (umesto ribljeg ulja)
-- Laneno seme, chia, orasi (ALA) — za DHA/EPA najbolje ulje iz algi
+- Laneno seme, chia seme, orasi
 ## Metabolizam (umesto L-karnitina)
 - Zeleni čaj, zeleni čili, kurkuma
 ## Oporavak mišića
