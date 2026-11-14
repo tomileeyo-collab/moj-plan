@@ -6,7 +6,7 @@
 // =====================================================================
 
 const DEFAULT_DATA = {
-  version: 3,
+  version: 4,
 
   // ------------------------------------------------------------------
   //  VEŽBE (biblioteka) — slika: img/ex/<id>-0.jpg i -1.jpg
@@ -53,7 +53,7 @@ const DEFAULT_DATA = {
     calf: { name: "Listovi (podizanje na prste)", en: "Calf raises", muscles: "Listovi",
       tips: ["Dole puno istezanje", "Gore pauza 1 sekundu", "Polako — listovi vole sporo"] },
     hiit: { name: "HIIT (kratko)", en: "Sprint intervali", muscles: "Kondicija · sagorevanje",
-      tips: ["30 s sprint + 60 s lagan hod", "8–10 krugova (traka, bicikl ili napolju)", "Ako su noge 'ubijene' posle čučnja — bicikl"] },
+      tips: ["30 s sprint + 60 s lagan hod", "10 krugova (traka, bicikl ili napolju)", "Ako su noge 'ubijene' posle čučnja — bicikl"] },
     russian: { name: "Ruski twist", en: "Russian twists (sa težinom)", muscles: "Kosi trbušnjaci",
       tips: ["Trup nagnut nazad ~45°, stopala mogu na podu", "Rotiraj ramena, ne samo ruke", "10 na svaku stranu"] },
     ohp: { name: "Potisak iznad glave", en: "Overhead press (OHP)", muscles: "Ramena · triceps",
@@ -73,7 +73,7 @@ const DEFAULT_DATA = {
     incline_machine: { name: "Kosi potisak na mašini", en: "Incline machine press", muscles: "Gornje grudi · ramena",
       tips: ["Podesi sedište da ručke budu u visini grudi", "Kontrolisano nazad", "Ne zaključavaj laktove"] },
     zone2: { name: "Kardio Zona 2", en: "Zone 2 kardio", muscles: "Srce · kondicija",
-      tips: ["Tempo u kom možeš da pričaš, ali ne pevaš", "Bicikl, traka na nagibu ili orbitrek", "Puls oko 60–70% maksimuma"] },
+      tips: ["Tempo u kom možeš da pričaš, ali ne pevaš", "Bicikl, traka na nagibu ili orbitrek"] },
     bicycle: { name: "Bicikl trbušnjaci", en: "Bicycle crunches", muscles: "Trbušnjaci · kosi",
       tips: ["Lakat ka suprotnom kolenu", "Sporo i kontrolisano", "Donji deo leđa uz pod"] },
     // ---- zamene (mesec 4 i 10)
@@ -91,6 +91,8 @@ const DEFAULT_DATA = {
       tips: ["Kreni sa dlanovima ka sebi", "Rotiraj dok potiskuješ gore", "Kontrolisano nazad"] },
     reverse_crunch: { name: "Obrnuti trbušnjaci", en: "Reverse crunch", muscles: "Donji trbušnjaci",
       tips: ["Leđa na podu", "Podigni karlicu ka grudima", "Bez zamaha"] },
+    toes: { name: "Toes to bar", en: "Prsti do šipke", muscles: "Trbušnjaci · jezgro",
+      tips: ["Vis na šipci, ramena aktivna", "Podigni prste do šipke podvijanjem karlice", "Spuštaj polako, bez ljuljanja"] },
     upright: { name: "Uspravno veslanje", en: "Upright row", muscles: "Ramena · trapez",
       tips: ["Širi hvat (štedi ramena)", "Laktovi vode, do visine ramena", "Ako bocka rame — preskoči"] },
   },
@@ -127,7 +129,8 @@ const DEFAULT_DATA = {
       { ex: "legext", sets: 2, reps: "12–15", rest: "75 s", iso: true },
       { ex: "calf", sets: 4, reps: "10–20", rest: "60 s", iso: true },
       { ex: "russian", sets: 3, reps: "20 (10/strana)", rest: "30 s", core: true },
-      { ex: "hiit", sets: 1, reps: "8–10 krugova", rest: "—", cardio: true },
+      { ex: "hiit", sets: 1, reps: "10 krugova", rest: "—", cardio: true },
+      { ex: "zone2", sets: 1, reps: "20–30 min", rest: "—", cardio: true },
     ]},
     5: { title: "Ramena", subtitle: "Ramena + trap + dodatno leđa", duration: "70–100 min", items: [
       { ex: "ohp", sets: 4, reps: "5–8", rest: "120 s", main: true },
@@ -157,28 +160,29 @@ const DEFAULT_DATA = {
   //  12 MESECI — svaki mesec: 3 nedelje napred + 4. nedelja deload
   // ------------------------------------------------------------------
   months: [
-    { m: 1, focus: "Baza + volumen", text: "Glavne vežbe 5–8 ponavljanja, dodatne 8–12, izolacije 12–20. RIR 2–3 (ostavi 2–3 ponavljanja u rezervi)." },
-    { m: 2, focus: "Baza + volumen", text: "Isto kao mesec 1, ali dodaj +1 seriju na 2–3 glavne vežbe. Dvostruka progresija: prvo ponavljanja, pa kilaža." },
-    { m: 3, focus: "Baza + volumen", text: "Glavne 5–8, dodatne 8–12, izolacije 12–20. Pokušaj da prva vežba ide malo teže (4–7 ponavljanja)." },
-    { m: 4, focus: "Deload + zamene vežbi", text: "Prva nedelja lakše (RIR 3–4). Ceo mesec rade se ZAMENE vežbi da se odmore zglobovi.", swap: "A", deloadWeek1: true },
-    { m: 5, focus: "Intenzifikacija (snaga + masa)", text: "Prva (glavna) vežba 3–6 ponavljanja, ostalo 6–12. Kardio Zona 2 2× nedeljno po 20–25 min.", reps: { main: "3–6", sec: "6–12" } },
-    { m: 6, focus: "Intenzifikacija (snaga + masa)", text: "Prva vežba 3–6 ponavljanja, ostalo 6–12. Teške serije, ali čista tehnika.", reps: { main: "3–6", sec: "6–12" } },
-    { m: 7, focus: "Deload + mini PR", text: "Nedelja 1 deload; nedelje 2–4 progresija do jednog teškog seta od 3–5 ponavljanja (mini rekord).", deloadWeek1: true, reps: { main: "3–5" } },
-    { m: 8, focus: "Hipertrofija — 2. talas", text: "Glavne 6–10, dodatne 8–15, izolacije 12–25. Više serija. Zona 2: 2–3× po 25–35 min.", reps: { main: "6–10", sec: "8–15", iso: "12–25" } },
-    { m: 9, focus: "Hipertrofija — 2. talas", text: "Glavne 6–10, dodatne 8–15, izolacije 12–25.", reps: { main: "6–10", sec: "8–15", iso: "12–25" } },
-    { m: 10, focus: "Deload + zamene (ponovo)", text: "Prva nedelja lakše (RIR 3–4). Rotiraj vežbe (zamene), smanji serije.", swap: "B", deloadWeek1: true },
-    { m: 11, focus: "Masa ili rekompozicija + kondicija", text: "Zadrži teške serije 4–8, volumen 8–15. Zona 2 + kratak HIIT.", reps: { main: "4–8", sec: "8–15" } },
-    { m: 12, focus: "Masa ili rekompozicija + kondicija", text: "Zadrži teške serije 4–8, volumen 8–15. Na kraju meseca — procena i novi plan.", reps: { main: "4–8", sec: "8–15" } },
+    { m: 1, focus: "Baza + volumen (hipertrofija)", text: "Glavne vežbe 5–8 ponavljanja, dodatne 8–12, izolacije 12–20. Kardio: Zona 2 i kratak HIIT." },
+    { m: 2, focus: "Baza + volumen (hipertrofija)", text: "Glavne vežbe 5–8 ponavljanja, dodatne 8–12, izolacije 12–20. Kardio: Zona 2 i kratak HIIT." },
+    { m: 3, focus: "Baza + volumen (hipertrofija)", text: "Glavne vežbe 5–8 ponavljanja, dodatne 8–12, izolacije 12–20. Kardio: Zona 2 i kratak HIIT." },
+    { m: 4, focus: "Deload + zamene vežbi (zglobovi)", text: "Ceo mesec lakše (RIR 3–4), prve nedelje i manje serija. Zamene: bench → kosi bench, veslanje → T-bar, čučanj → hack, RDL → hip thrust, mrtvo → sumo. Lagana Zona 2.", swap: "A", deloadWeek1: true },
+    { m: 5, focus: "Intenzifikacija (snaga + masa)", text: "Prva (glavna) vežba 3–6 ponavljanja, ostalo 6–12, izolacije 10–20. Zona 2: 25–35 min.", reps: { main: "3–6", sec: "6–12", iso: "10–20" } },
+    { m: 6, focus: "Intenzifikacija (snaga + masa)", text: "Prva (glavna) vežba 3–6 ponavljanja, ostalo 6–12, izolacije 10–20. Zona 2: 25–35 min.", reps: { main: "3–6", sec: "6–12", iso: "10–20" } },
+    { m: 7, focus: "Deload + mini PR", text: "Nedelja 1 deload; nedelje 2–4 progresija: na glavnoj vežbi jedan težak set od 3–5 ponavljanja.", deloadWeek1: true, topSet: "3–5" },
+    { m: 8, focus: "Hipertrofija — 2. talas", text: "Glavne 6–10, dodatne 8–15, izolacije 12–25. Zona 2: 25–35 min.", reps: { main: "6–10", sec: "8–15", iso: "12–25" } },
+    { m: 9, focus: "Hipertrofija — 2. talas", text: "Glavne 6–10, dodatne 8–15, izolacije 12–25. Zona 2: 25–35 min.", reps: { main: "6–10", sec: "8–15", iso: "12–25" } },
+    { m: 10, focus: "Deload + zamene (ponovo)", text: "Ceo mesec lakše (RIR 3–4), prve nedelje i manje serija. Zamene: OHP → Arnold, odručenje → uspravno veslanje, podizanje nogu → toes to bar, bicikl trbušnjaci → obrnuti, mrtvo → sumo.", swap: "B", deloadWeek1: true },
+    { m: 11, focus: "Masa ili rekompozicija (po izgledu) + kondicija", text: "Zadrži teške serije 4–8, volumen 8–15. Zona 2 + kratak HIIT.", reps: { main: "4–8", sec: "8–15" } },
+    { m: 12, focus: "Masa ili rekompozicija (po izgledu) + kondicija", text: "Zadrži teške serije 4–8, volumen 8–15. Zona 2 + kratak HIIT.", reps: { main: "4–8", sec: "8–15" } },
   ],
   swaps: {
     A: { bench: "incline_bench", row: "tbar", squat: "hack", rdl: "hipthrust", deadlift: "sumo" },
-    B: { ohp: "arnold", deadlift: "sumo", row: "tbar", hlr: "reverse_crunch", bicycle: "reverse_crunch" },
+    B: { ohp: "arnold", lateral: "upright", hlr: "toes", bicycle: "reverse_crunch", deadlift: "sumo" },
   },
 
   trainingRules: [
-    "Dvostruka progresija: prvo dižeš ponavljanja do gornje granice, pa onda +2.5–5% kilaže.",
-    "Glavne vežbe: RIR 1–2 (ostavi 1–2 ponavljanja u rezervi). Izolacije mogu do otkaza na poslednjoj seriji.",
-    "Deload (svake 4. nedelje): ~40% manje serija, tehnika, ne ideš do otkaza.",
+    "Dvostruka progresija: prvo dižeš ponavljanja do gornje granice, pa onda +2,5–5% kilaže.",
+    "Glavne vežbe: RIR 1–2 (ostavi 1–2 ponavljanja u rezervi).",
+    "Izolacije: RIR 0–1 na poslednjim serijama.",
+    "Deload: ~40% manje serija, tehnika, ne ideš do otkaza (4. nedelja meseca; u mesecima 4, 7 i 10 prva nedelja).",
     "Glavne vežbe uvek prve, izolacije posle.",
     "Pad energije usred treninga → sledeći put 20–30 g brzih UH pre (galete/banana).",
     "Zglobovi bole → ubaci zamene vežbi ranije i smanji serije izolacija.",
@@ -193,16 +197,16 @@ const DEFAULT_DATA = {
       prep: ["Ovsene pahuljice prelij biljnim mlekom i kuvaj 3–5 min uz mešanje (ili ih prelij uveče i ostavi u frižideru preko noći).","Vege protein prvo razmuti u malo mleka, pa ga umešaj u kašu kad je skloniš sa vatre (da se ne zgrudva).","Dodaj isečenu bananu i mleveni lan (ili chia)."] },
     d_heljda: { name: "Heljda sa bobičastim voćem", items: ["Heljda 80 g", "Bobičasto voće 150 g", "Mleveni lan 10 g (ili chia 10 g)", "Biljno mleko 250 ml", "Vege protein 25–30 g"], mins: 15,
       prep: ["Heljdu isperi i kuvaj 12–15 min u 2× više vode (može se skuvati unapred za 2–3 dana).","Prelij toplim biljnim mlekom.","Umešaj razmućen vege protein, dodaj bobičasto voće (može i smrznuto) i mleveni lan."] },
-    d_zeleni: { name: "Zelena ovsena (smoothie/kaša)", items: ["Banana 120 g", "Spanać 50 g", "Ovsene pahuljice 60 g", "Mleveni lan 10 g (ili chia 10 g)", "Vege protein 30 g", "Voda"], mins: 3,
+    d_zeleni: { name: "Zelena ovsena (smuti ili kaša)", items: ["Banana 120 g", "Spanać 50 g", "Ovsene pahuljice 60 g", "Mleveni lan 10 g (ili chia 10 g)", "Vege protein 30 g", "Voda"], mins: 3,
       prep: ["U blender stavi bananu, spanać, ovsene pahuljice, mleveni lan, vege protein i 250–300 ml vode.","Blendaj 40–60 s dok ne bude glatko.","Pij odmah ili jedi kašikom kao gustu kašu."] },
     d_proso: { name: "Proso sa jabukom i cimetom", items: ["Proso 80 g", "Jabuka 150 g", "Cimet", "Mleveni lan 10 g (ili chia 10 g)", "Vege protein 30 g", "Biljno mleko 250 ml"], mins: 20,
       prep: ["Proso isperi toplom vodom i kuvaj 15–20 min u 2,5× više vode (može unapred za 2–3 dana).","Dodaj biljno mleko, seckanu ili rendanu jabuku i cimet, pa prokuvaj 2 min.","Skloni sa vatre, umešaj razmućen vege protein i mleveni lan."] },
     // pre treninga
-    p_galete: { name: "Galete + džem + šejk", items: ["Pirinčane galete 5–6", "Džem 20–30 g", "Vege protein 25–30 g (u vodi)"], mins: 2,
+    p_galete: { name: "Galete + džem + šejk", items: ["Pirinčane galete 5–6 kom", "Džem 20–30 g", "Vege protein 25–30 g (u vodi)"], mins: 2,
       prep: ["Galete namaži džemom.","Vege protein promućkaj u šejkeru sa 250–300 ml vode.","Jedi 45–60 min pre treninga, bez masti (bez tahinija, sira i orašastog)."] },
-    p_banana: { name: "Banana + galete + šejk", items: ["Banana 1 kom", "Pirinčane galete 3–4", "Vege protein 25–30 g"], mins: 2,
+    p_banana: { name: "Banana + galete + šejk", items: ["Banana 1 kom", "Pirinčane galete 3–4 kom", "Vege protein 25–30 g"], mins: 2,
       prep: ["Vege protein promućkaj u šejkeru sa 250–300 ml vode.","Uz šejk pojedi bananu i 3–4 galete.","45–60 min pre treninga."] },
-    p_ovas: { name: "Ovsene + med + šejk", items: ["Ovsene pahuljice 40 g", "Džem ili med 15 g", "Vege protein 25–30 g (u vodi)"], mins: 5,
+    p_ovas: { name: "Ovsene + džem/med + šejk", items: ["Ovsene pahuljice 40 g", "Džem ili med 15 g", "Vege protein 25–30 g (u vodi)"], mins: 5,
       prep: ["Ovsene pahuljice prelij sa 100 ml vrele vode i ostavi 3 min da nabubre.","Umešaj džem ili med.","Vege protein promućkaj u šejkeru sa 250–300 ml vode."] },
     p_krompir: { name: "Kuvani krompir + šejk", items: ["Kuvani krompir 300 g + so", "Vege protein 25–30 g"], mins: 25,
       prep: ["Krompir oljušti, iseci na kocke i kuvaj 15–20 min u slanoj vodi (može se skuvati uveče za sutra).","Posoli. Može topao ili hladan.","Vege protein promućkaj u šejkeru sa 250–300 ml vode."] },
@@ -232,7 +236,7 @@ const DEFAULT_DATA = {
       prep: ["Vege protein, 1 kašičica kakaa i malo cimeta promućkaj u šejkeru sa 300 ml vode.","Bundeva semenke pojedi sa strane."] },
     u_sir: { name: "Mladi sir + voće", items: ["Mladi sir 100 g", "Voće 200 g", "Bundeva semenke 25 g"], mins: 2,
       prep: ["Mladi sir stavi u činiju.","Dodaj iseckano voće (npr. jabuka, kruška, bobičasto ili banana).","Pospi bundeva semenkama."] },
-    u_humus_galete: { name: "Humus + galete", items: ["Humus 120 g", "Pirinčane galete 3–4", "Bundeva semenke 25 g"], mins: 2,
+    u_humus_galete: { name: "Humus + galete", items: ["Humus 120 g", "Pirinčane galete 3–4 kom", "Bundeva semenke 25 g"], mins: 2,
       prep: ["Galete namaži humusom.","Uz to pojedi bundeva semenke."] },
     u_jaja_salata: { name: "Jaja + hleb + salata", items: ["2 jaja", "Integralni hleb 70 g", "Salata", "Bundeva semenke 25 g"], mins: 10,
       prep: ["Jaja skuvaj 8–9 min (tvrdo) ili ih ispeci.","Uz integralni hleb i salatu (zelena salata, paradajz, krastavac).","Bundeva semenke sa strane."] },
@@ -246,8 +250,10 @@ const DEFAULT_DATA = {
     v_jaja: { name: "Jaja + spanać + pečurke + krompir", items: ["3 jaja", "Spanać", "Pečurke", "Krompir 250 g"], mins: 25,
       prep: ["Krompir skuvaj (15–20 min) ili ispeci u rerni na 200 °C 25 min.","Pečurke proprži 5 min, pa dodaj spanać da uvene 1–2 min.","Umuti 3 jaja, prelij preko povrća i ispeci kao omlet."] },
     // pre spavanja
-    s_caj: { name: "Čaj", items: ["Čaj (kamilica / nana)", "Opciono: mini šejk 20–25 g ako je tog dana falio protein"], mins: 5,
-      prep: ["Skuvaj čaj od kamilice ili nane (5 min).","Ako je tog dana falio protein: mini šejk od 20–25 g vege proteina u vodi."] },
+    s_caj: { name: "Čaj", items: ["Čaj (kamilica / nana)", "Opciono: mini šejk 20–25 g vege proteina (samo ako si danas preskočio neki obrok)"], mins: 5,
+      prep: ["Skuvaj čaj od kamilice ili nane (5 min).", "Samo ako si danas preskočio neki obrok: 20–25 g vege proteina promućkaj u vodi."] },
+    s_caj_o: { name: "Čaj", items: ["Čaj (kamilica / nana)"], mins: 5,
+      prep: ["Skuvaj čaj od kamilice ili nane (5 min)."] },
   },
 
   // vreme obroka
@@ -275,14 +281,14 @@ const DEFAULT_DATA = {
     B: { label: "Trening dan B", dor: "d_heljda", pre: "p_banana", posle: "r_pirinac", uz: "u_jabuka", vec: "v_pasulj", spav: "s_caj" },
     C: { label: "Trening dan C", dor: "d_zeleni", pre: "p_ovas", posle: "r_testenina", uz: "u_jaja", vec: "v_tofu", spav: "s_caj" },
     D: { label: "Trening dan D", dor: "d_proso", pre: "p_krompir", posle: "r_bulgur", uz: "u_kakao", vec: "v_jaja", spav: "s_caj" },
-    O1: { label: "Odmor 1", rest: true, dor: "d_proso", uz1: "u_kakao", ruc: "r_kinoa_odmor", uz2: "u_sir", vec: "v_jaja", spav: "s_caj" },
-    O2: { label: "Odmor 2", rest: true, dor: "d_zeleni", uz1: "u_jaja", ruc: "r_kinoa_odmor", uz2: "u_sir", vec: "v_tofu", spav: "s_caj" },
-    O3: { label: "Odmor 3", rest: true, dor: "d_zeleni", uz1: "u_jaja", ruc: "r_salata", uz2: "u_humus_galete", vec: "v_tofu", spav: "s_caj" },
-    O4: { label: "Odmor 4", rest: true, dor: "d_heljda", uz1: "u_jabuka", ruc: "r_salata", uz2: "u_humus_galete", vec: "v_pasulj", spav: "s_caj" },
-    O5: { label: "Odmor 5", rest: true, dor: "d_heljda", uz1: "u_jabuka", ruc: "r_tempeh_heljda", uz2: "u_jaja_salata", vec: "v_pasulj", spav: "s_caj" },
-    O6: { label: "Odmor 6", rest: true, dor: "d_ovas", uz1: "u_humus", ruc: "r_tempeh_heljda", uz2: "u_jaja_salata", vec: "v_socivo", spav: "s_caj" },
-    O7: { label: "Odmor 7", rest: true, dor: "d_ovas", uz1: "u_humus", ruc: "r_kinoa_odmor", uz2: "u_sir", vec: "v_socivo", spav: "s_caj" },
-    O8: { label: "Odmor 8", rest: true, dor: "d_proso", uz1: "u_kakao", ruc: "r_kinoa_odmor", uz2: "u_sir", vec: "v_jaja", spav: "s_caj" },
+    O1: { label: "Odmor 1", rest: true, dor: "d_proso", uz1: "u_kakao", ruc: "r_kinoa_odmor", uz2: "u_sir", vec: "v_jaja", spav: "s_caj_o" },
+    O2: { label: "Odmor 2", rest: true, dor: "d_zeleni", uz1: "u_jaja", ruc: "r_kinoa_odmor", uz2: "u_sir", vec: "v_tofu", spav: "s_caj_o" },
+    O3: { label: "Odmor 3", rest: true, dor: "d_zeleni", uz1: "u_jaja", ruc: "r_salata", uz2: "u_humus_galete", vec: "v_tofu", spav: "s_caj_o" },
+    O4: { label: "Odmor 4", rest: true, dor: "d_heljda", uz1: "u_jabuka", ruc: "r_salata", uz2: "u_humus_galete", vec: "v_pasulj", spav: "s_caj_o" },
+    O5: { label: "Odmor 5", rest: true, dor: "d_heljda", uz1: "u_jabuka", ruc: "r_tempeh_heljda", uz2: "u_jaja_salata", vec: "v_pasulj", spav: "s_caj_o" },
+    O6: { label: "Odmor 6", rest: true, dor: "d_ovas", uz1: "u_humus", ruc: "r_tempeh_heljda", uz2: "u_jaja_salata", vec: "v_socivo", spav: "s_caj_o" },
+    O7: { label: "Odmor 7", rest: true, dor: "d_ovas", uz1: "u_humus", ruc: "r_kinoa_odmor", uz2: "u_sir", vec: "v_socivo", spav: "s_caj_o" },
+    O8: { label: "Odmor 8", rest: true, dor: "d_proso", uz1: "u_kakao", ruc: "r_kinoa_odmor", uz2: "u_sir", vec: "v_jaja", spav: "s_caj_o" },
   },
   // 4 nedelje × 7 dana (index 0=Pon ... 6=Ned)
   mealRotation: [
@@ -303,9 +309,9 @@ const DEFAULT_DATA = {
     "Feta 30–50 g/dan (slana i masnija) — posle treninga ili uveče.",
     "Mladi sir 50–100 g/dan je ok u užini ili večeri.",
     "Sir je dodatak, a glavni protein su tofu, tempeh, mahunarke i šejk.",
-    "Svaki dan: bundeva semenke 25–30 g, tahini/susam 15–20 g, mahunarke 250–350 g kuvano, mleveni lan 10 g.",
+    "Svaki dan: bundeva semenke 25–30 g, tahini 2 kašike (deo je već u obrocima, ostatak uz večeru), mahunarke 250–350 g kuvano, mleveni lan 10 g.",
     "Jod: koristi jodiranu so u kući.",
-    "Voda: oko 2.5–3 L dnevno + još tokom treninga (obavezno uz kreatin).",
+    "Voda: 2,3–3 L dnevno + još tokom treninga (obavezno uz kreatin).",
     "Korekcije radi najviše jednom u 2 nedelje (±150 kcal), ne menjaj stalno.",
   ],
 
@@ -327,31 +333,32 @@ const DEFAULT_DATA = {
   //  days: "all" | "train" | "rest"
   // ------------------------------------------------------------------
   supplements: [
-    { id: "smuti", time: "07:30", days: "all", name: "Jutarnji smuti „Kosti & zubi“", dose: "1 čaša", note: "Spirulina, hlorela, pšenična trava, ječmena trava, kopriva, šipurak, bundeva semenke, kolagen, ½ banane, sok od narandže. Popiti odmah.", color: "green",
+    // kind: Suplement | Hrana | Užina | Čaj | Podsetnik   ·   note = kratko (vidi se i u listi)
+    // how = koraci, why = zašto — bez ponavljanja istog podatka
+    { id: "smuti", kind: "Suplement", time: "07:30", days: "all", name: "Jutarnji smuti „Kosti & zubi“", dose: "1 čaša", note: "Spirulina, hlorela, pšenična trava, ječmena trava, kopriva, šipurak, bundeva semenke, kolagen, ½ banane, sok od narandže.", color: "green",
       why: "Minerali, vitamin C i kolagen za kosti, zube i desni." },
-    { id: "k2", time: "07:30", days: "all", name: "Dr. Viton K2 Komplex", dose: "1 kapsula", note: "Uz smuti. D3 + K2 (MK-7) + Ca + Mg + Zn.", color: "purple",
-      how: ["1 kapsula uz smuti."],
-      why: "D3 apsorbuje kalcijum, K2 ga usmerava u kosti i zube — ne u arterije." },
-    { id: "kafa", time: "08:30", days: "all", name: "Kafa — tek sada", dose: "", note: "Najranije 60 min posle smutija (tanini blokiraju gvožđe i cink).", color: "gray", noCheck: true,
-      how: ["Kafa najranije 60 min posle smutija."],
+    { id: "k2", kind: "Suplement", time: "07:30", days: "all", name: "Dr. Viton K2 Komplex", dose: "1 kapsula", note: "Uz smuti.", color: "purple",
+      why: "D3 + K2 (MK-7) + Ca + Mg + Zn. D3 apsorbuje kalcijum, K2 ga usmerava u kosti i zube — ne u arterije." },
+    { id: "kafa", kind: "Podsetnik", time: "08:30", days: "all", name: "Kafa — tek sada", dose: "", note: "Najranije 60 min posle smutija.", color: "gray", noCheck: true,
       why: "Tanini i kofein blokiraju gvožđe, cink i magnezijum iz smutija." },
-    { id: "protein", time: "13:30", days: "train", name: "Šejk posle treninga", dose: "Vege protein 30–40 g + kreatin 5 g", note: "Jedan šejk: protein i kreatin zajedno.", color: "orange",
-      how: ["U šejker stavi 30–40 g vege proteina (grašak + pirinač) i 5 g kreatina monohidrata.", "Dodaj 300–400 ml vode ili biljnog mleka i promućkaj.", "Popij odmah posle treninga."],
-      why: "Protein za oporavak i rast mišića; kreatin za snagu i oporavak." },
-    { id: "kreatin_o", time: "14:00", days: "rest", name: "Kreatin monohidrat", dose: "5 g", note: "Uz ručak — i na dan odmora.", color: "orange",
-      how: ["5 g kreatina u čaši vode ili soka, uz ručak."],
+    { id: "protein", kind: "Suplement", time: "13:30", days: "train", name: "Šejk posle treninga", dose: "Vege protein 30–40 g + kreatin 5 g", note: "", color: "orange",
+      how: ["Oba praha u šejker sa 300–400 ml vode ili biljnog mleka i promućkaj.", "Popij čim završiš trening, pa ručak."],
+      why: "Protein za oporavak i rast mišića; kreatin za snagu i oporavak.", shop: ["Vege protein 40 g"] },
+    { id: "kreatin_o", kind: "Suplement", time: "14:00", days: "rest", name: "Kreatin monohidrat", dose: "5 g", note: "Uz ručak.", color: "orange",
+      how: ["U čaši vode ili soka."],
       why: "Kreatin se uzima svaki dan, i kad ne treniraš." },
-    { id: "rastavic", time: "15:30", days: "all", name: "Čaj od rastavića", dose: "1 šolja", note: "Odvojeno od obroka. 3 meseca piješ, pa 1 mesec pauza.", color: "blue",
-      how: ["1 kašiku suvog rastavića prelij sa 250 ml vrele (ne ključale) vode.","Poklopi i ostavi 10–15 min, pa procedi.","Pij odvojeno od obroka, ne u smutiju."],
+    { id: "rastavic", kind: "Čaj", time: "15:30", days: "all", name: "Čaj od rastavića", dose: "1 šolja", note: "3 meseca piješ, pa 1 mesec pauza — aplikacija sama pravi pauzu (meseci 4, 8 i 12).", color: "blue", cycle: true,
+      how: ["1 kašiku suvog rastavića prelij sa 250 ml vrele (ne ključale) vode.", "Poklopi, ostavi 10–15 min i procedi.", "Pij odvojeno od obroka, ne u smutiju."],
       why: "Silicijum za kolagen, kosti i nokte." },
-    { id: "smokve", time: "18:30", days: "all", name: "Suve smokve + bademi", dose: "3 kom + 20 g", note: "Grickalica između obroka. Bademi potopljeni od prethodne večeri.", color: "brown",
-      how: ["Pojedi 3 suve smokve i 20 g badema (potopljenih od prethodne večeri, oceđenih)."],
+    { id: "smokve", kind: "Užina", time: "18:30", days: "all", name: "Suve smokve + bademi", dose: "3 kom + 20 g", note: "Bademi potopljeni od prethodne večeri.", color: "brown",
       why: "Kalcijum, kalijum i magnezijum za kosti." },
-    { id: "mg", time: "22:00", days: "all", name: "Magnezijum bisglicinat", dose: "200–300 mg", note: "Opciono — ako imaš grčeve, loš san ili stres.", color: "blue", optional: true,
-      how: ["200–300 mg magnezijum bisglicinata (obično 2 kapsule, proveri na kutiji).","30–60 min pre spavanja."],
+    { id: "tahini", kind: "Hrana", time: "20:30", days: "all", name: "Tahini (pasta od susama)", dose: "2 kašike dnevno", note: "Uz večeru: namaz na hleb, u dresing ili u humus.", color: "brown",
+      why: "Kalcijum, magnezijum, fosfor i cink — zamena za mlečne proizvode." },
+    { id: "mg", kind: "Suplement", time: "22:00", days: "all", name: "Magnezijum bisglicinat", dose: "200–300 mg", note: "Opciono — ako imaš grčeve, loš san ili stres.", color: "blue", optional: true,
+      how: ["30–60 min pre spavanja."],
       why: "Opušta mišiće, bolji san, noćni oporavak." },
-    { id: "bademi", time: "22:00", days: "all", name: "Potopi bademe za sutra", dose: "20 g u vodu", note: "8–12 h potapanja razgrađuje fitinsku kiselinu.", color: "gray",
-      how: ["20 g badema stavi u čašu i prelij vodom.","Ostavi preko noći (8–12 h), ujutru ih ocedi."],
+    { id: "bademi", kind: "Podsetnik", time: "22:00", days: "all", name: "Potopi bademe za sutra", dose: "20 g", note: "", color: "gray",
+      how: ["Bademe stavi u čašu i prelij vodom.", "Ostavi preko noći (8–12 h), ujutru ih ocedi."],
       why: "Potapanje razgrađuje fitinsku kiselinu, pa se kalcijum i magnezijum bolje upijaju." },
   ],
 
@@ -381,7 +388,7 @@ const DEFAULT_DATA = {
     ],
     tips: [
       "Ako je pregorko: još ½ banane ili 1 kašika tahinija.",
-      "Prvih 3–4 dana spirulinu kreni sa 2 g pa podigni.",
+      "Prvih 3–4 dana stavi pola kašičice spiruline, pa onda punu kašičicu.",
       "Rastavić NE ide u smuti — pije se kao čaj, odvojeno.",
     ],
   },
@@ -412,7 +419,7 @@ const DEFAULT_DATA = {
 
   dailyCore: [
     { t: "Omega-3 (biljno)", d: "Mleveni lan 10 g dnevno (najlakše u kašu/smuti), i/ili chia 10 g, orasi 20–30 g (ne moraju svaki dan, ali često)." },
-    { t: "Minerali (cink, magnezijum, gvožđe)", d: "Bundeva semenke 25–30 g, susam/tahini 15–20 g ili mak, mahunarke svaki dan: sočivo/pasulj/leblebije 250–350 g kuvano." },
+    { t: "Minerali (cink, magnezijum, gvožđe)", d: "Bundeva semenke 25–30 g, tahini 2 kašike dnevno, mahunarke svaki dan: sočivo/pasulj/leblebije 250–350 g kuvano." },
     { t: "Kalcijum (bez mleka, uz malo sira)", d: "Tofu sa kalcijumom (ako ga nađeš), susam/tahini, brokoli/kupus/kelj, mladi sir 50–100 g ili feta 30–50 g." },
     { t: "Jod", d: "Jodirana so u kući. Ako koristiš alge kao hranu: mala količina nori povremeno (ne preterivati)." },
   ],
@@ -511,7 +518,7 @@ Dvostruka progresija | Prvo dižeš ponavljanja do gornje granice, pa tek onda k
 TUT | Vreme pod tenzijom — spor, kontrolisan rad i zadržavanje u sredini pokreta
 Tempo | Koliko sekundi gore, pauza, koliko dole (serija ukupno ~40–60 s)
 HIIT | Visokointenzivni intervali (npr. 30 s sprint / 60 s hod)
-Zona 2 | Lagan kardio u kome možeš da pričaš (≈60–70% maks. pulsa)
+Zona 2 | Lagan kardio u kome možeš da pričaš, ali ne i da pevaš
 Top set | Najteža serija dana posle zagrevanja` },
     { id: "oporavak", icon: "😴", title: "Oporavak i praćenje", body:
 `- San: 7.5–9 h (bez sna višak kalorija ide u mast)

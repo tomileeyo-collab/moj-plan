@@ -314,3 +314,10 @@ button.what { background: none; border: 0; padding: 0; margin: 0; text-align: le
 .sh-btns { display: flex; gap: 8px; margin-top: 20px; position: sticky; bottom: 0; background: var(--bg2); padding: 8px 0 4px; }
 .sh-btns .btn { flex: 1; padding: 13px; }
 .dlg { overflow-y: auto; }
+
+/* ---------- v5: trening red sa kružićem, doza u kartici ---------- */
+.tl-train-wrap { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #1f3a2c, #1b2a23); border: 1px solid #2f5a42; border-radius: 16px; padding: 0 12px 0 0; margin-bottom: 8px; }
+.tl-train-wrap .tl-train { flex: 1; background: none; border: 0; margin: 0; min-width: 0; }
+.tl-train-wrap.done { opacity: .55; }
+.sh-dose { font-size: 18px; font-weight: 700; color: var(--accent); margin: 2px 0; }
+.field[hidden] { display: none; }

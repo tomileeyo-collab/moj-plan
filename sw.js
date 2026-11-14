@@ -1,5 +1,5 @@
 // Offline rad: sve se kešira pri instalaciji.
-const CACHE = "mojplan-v6";
+const CACHE = "mojplan-v7";
 const FILES = [
   "./",
   "./index.html",
@@ -46,6 +46,8 @@ const FILES = [
   "./img/ex/hipthrust-1.jpg",
   "./img/ex/hlr-0.jpg",
   "./img/ex/hlr-1.jpg",
+  "./img/ex/toes-0.jpg",
+  "./img/ex/toes-1.jpg",
   "./img/ex/incline_bench-0.jpg",
   "./img/ex/incline_bench-1.jpg",
   "./img/ex/incline_db-0.jpg",
@@ -109,8 +111,7 @@ self.addEventListener("fetch", (e) => {
   }
   e.respondWith(
     fetch(e.request).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE).then((c) => c.put(e.request, copy));
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); } // greške (404/500) se ne čuvaju
       return res;
     }).catch(() => caches.match(e.request, { ignoreSearch: true }).then((r) => r || caches.match("./index.html")))
   );
